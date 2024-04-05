@@ -1,15 +1,14 @@
 package repositories
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 
 	"gorm.io/gorm"
 )
 
 type UrlInput struct {
-	Url string
+	Url       string
+	HashedUrl string
 }
 
 type Urls struct {
@@ -29,12 +28,10 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 }
 
 func (r *UrlRepository) Create(input UrlInput) Urls {
-	hasher := md5.New()
-	hasher.Write([]byte(input.Url))
-	hashedUrl := hex.EncodeToString(hasher.Sum(nil))
+
 	url := Urls{
 		OriginalUrl: input.Url,
-		ShortUrl:    hashedUrl,
+		ShortUrl:    input.HashedUrl,
 	}
 	err := r.db.Create(&url)
 	if err != nil {

@@ -1,6 +1,8 @@
 package urls
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
@@ -28,9 +30,11 @@ func (u *UrlController) Create(c *fiber.Ctx) error {
 		return err
 	}
 	fmt.Printf("%+v", input)
+	hashedUrl := hashUrl(input.OriginalUrl)
 
 	id := u.urlRepo.Create(repositories.UrlInput{
-		Url: input.OriginalUrl,
+		Url:       input.OriginalUrl,
+		HashedUrl: hashedUrl,
 	})
 
 	return c.JSON(id)
@@ -43,4 +47,11 @@ func (u *UrlController) Get(c *fiber.Ctx) error {
 	fmt.Printf("yrl is %+v\n", url)
 
 	return c.Redirect(url.OriginalUrl, http.StatusMovedPermanently)
+}
+
+func hashUrl(url string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(url))
+	hashedUrl := hex.EncodeToString(hasher.Sum(nil))
+	return hashedUrl
 }
