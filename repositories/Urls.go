@@ -1,14 +1,21 @@
 package repositories
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 
 	"gorm.io/gorm"
 )
 
+type UrlInput struct {
+	Url string
+}
+
 type Urls struct {
 	gorm.Model
-	Url string `json:"url"`
+	OriginalUrl string `json:"originalUrl"`
+	ShortUrl    string `json:"shortUrl"`
 }
 
 type UrlRepository struct {
@@ -21,30 +28,26 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 	}
 }
 
-func (r *UrlRepository) Create(input Urls) uint {
-	url := Urls{Url: input.Url}
+func (r *UrlRepository) Create(input UrlInput) Urls {
+	hasher := md5.New()
+	hasher.Write([]byte(input.Url))
+	hashedUrl := hex.EncodeToString(hasher.Sum(nil))
+	url := Urls{
+		OriginalUrl: input.Url,
+		ShortUrl:    hashedUrl,
+	}
 	err := r.db.Create(&url)
 	if err != nil {
 		fmt.Println("Error creating url")
 	}
-	return url.ID
+	return url
 }
 
-func (r *UrlRepository) Find() []Urls {
-	var urls []Urls
-	err := r.db.Find(&urls).Error
-	if err != nil {
-		fmt.Println("Error creating url")
-		return []Urls{}
-	}
-	return urls
-}
-
-func (r *UrlRepository) FindOne(id uint) Urls {
+func (r *UrlRepository) FindOne(id string) Urls {
 	var url Urls
-	err := r.db.Find(&url, "id = ?", id).Error
+	err := r.db.Find(&url, "short_url = ?", id).Error
 	if err != nil {
-		fmt.Println("Error get url")
+		fmt.Println("Error get url", err)
 		return Urls{}
 	}
 	return url

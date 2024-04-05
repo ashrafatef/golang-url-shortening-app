@@ -12,6 +12,5 @@ func SetUpUrlRoutes(app *fiber.App, conn *gorm.DB) {
 	urlController := NewUrlController(urlRepo)
 
 	app.Post("/", urlController.Create)
-	app.Get("/", urlController.List)
 	app.Get("/:id", urlController.Get)
 }

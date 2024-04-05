@@ -1,11 +1,16 @@
 package urls
 
 import (
-	"strconv"
+	"fmt"
+	"net/http"
 
 	"github.com/ashrafatef/urlshortening/repositories"
 	"github.com/gofiber/fiber/v2"
 )
+
+type UrlInput struct {
+	OriginalUrl string
+}
 
 type UrlController struct {
 	urlRepo *repositories.UrlRepository
@@ -17,31 +22,25 @@ func NewUrlController(urlRepo *repositories.UrlRepository) *UrlController {
 	}
 }
 
-func (u *UrlController) List(c *fiber.Ctx) error {
-
-	urls := u.urlRepo.Find()
-	if len(urls) == 0 {
-		println("Could not find urls")
-	}
-	return c.JSON(urls)
-}
-
 func (u *UrlController) Create(c *fiber.Ctx) error {
-	input := new(repositories.Urls)
-
+	input := new(UrlInput)
 	if err := c.BodyParser(input); err != nil {
 		return err
 	}
-	id := u.urlRepo.Create(*input)
+	fmt.Printf("%+v", input)
+
+	id := u.urlRepo.Create(repositories.UrlInput{
+		Url: input.OriginalUrl,
+	})
 
 	return c.JSON(id)
 }
 
 func (u *UrlController) Get(c *fiber.Ctx) error {
-	param := c.Params("id")
-	id, _ := strconv.ParseUint(param, 10, 10)
+	id := c.Params("id")
+	fmt.Printf("%+v\n", id)
+	url := u.urlRepo.FindOne(id)
+	fmt.Printf("yrl is %+v\n", url)
 
-	url := u.urlRepo.FindOne(uint(id))
-
-	return c.JSON(url)
+	return c.Redirect(url.OriginalUrl, http.StatusMovedPermanently)
 }
