@@ -1,16 +1,19 @@
 package urls
 
 import (
+	"github.com/ashrafatef/urlshortening/db"
 	"github.com/ashrafatef/urlshortening/repositories"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
-func SetUpUrlRoutes(app *fiber.App, conn *gorm.DB) {
-
-	urlRepo := repositories.NewUrlRepository(conn)
+func SetUpUrlRoutes(app *fiber.App) *fiber.App {
+	dbConn := db.Connect()
+	urlRepo := repositories.NewUrlRepository(dbConn)
 	urlController := NewUrlController(urlRepo)
 
-	app.Post("/", urlController.Create)
-	app.Get("/:id", urlController.Get)
+	app.Post("/urls", urlController.Create)
+	app.Get("/urls/:id", urlController.GetUrl)
+	app.Get("/urls", urlController.GetUrls)
+
+	return app
 }

@@ -2,16 +2,18 @@ package urls
 
 import (
 	"crypto/md5"
-	"encoding/hex"
 	"fmt"
+	"math/big"
 	"net/http"
 
 	"github.com/ashrafatef/urlshortening/repositories"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+	"github.com/mattheath/base62"
 )
 
 type UrlInput struct {
-	OriginalUrl string
+	OriginalUrl string `json:"original_url"`
 }
 
 type UrlController struct {
@@ -26,7 +28,9 @@ func NewUrlController(urlRepo *repositories.UrlRepository) *UrlController {
 
 func (u *UrlController) Create(c *fiber.Ctx) error {
 	input := new(UrlInput)
-	if err := c.BodyParser(input); err != nil {
+	fmt.Printf("%+v", c.Body())
+	if err := c.BodyParser(&input); err != nil {
+		log.Error(err)
 		return err
 	}
 	fmt.Printf("%+v", input)
@@ -40,7 +44,8 @@ func (u *UrlController) Create(c *fiber.Ctx) error {
 	return c.JSON(id)
 }
 
-func (u *UrlController) Get(c *fiber.Ctx) error {
+func (u *UrlController) GetUrl(c *fiber.Ctx) error {
+	fmt.Println("NOT HEEEEEERE")
 	id := c.Params("id")
 	fmt.Printf("%+v\n", id)
 	url := u.urlRepo.FindOne(id)
@@ -49,9 +54,17 @@ func (u *UrlController) Get(c *fiber.Ctx) error {
 	return c.Redirect(url.OriginalUrl, http.StatusMovedPermanently)
 }
 
+func (u *UrlController) GetUrls(c *fiber.Ctx) error {
+	fmt.Println(" HEEEEEERE")
+	return c.JSON("Urls")
+}
+
 func hashUrl(url string) string {
 	hasher := md5.New()
-	hasher.Write([]byte(url))
-	hashedUrl := hex.EncodeToString(hasher.Sum(nil))
-	return hashedUrl
+	bigInt := new(big.Int)
+	hashedUrl := bigInt.SetBytes(hasher.Sum([]byte(url)))
+
+	encoded := base62.EncodeBigInt(hashedUrl)
+	fmt.Printf("encoded is %+v\n", string(encoded))
+	return string(encoded)[0:8]
 }

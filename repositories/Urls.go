@@ -13,7 +13,7 @@ type UrlInput struct {
 
 type Urls struct {
 	gorm.Model
-	OriginalUrl string `json:"originalUrl"`
+	OriginalUrl string `json:"originalUrl",gorm:"index"`
 	ShortUrl    string `json:"shortUrl"`
 }
 
