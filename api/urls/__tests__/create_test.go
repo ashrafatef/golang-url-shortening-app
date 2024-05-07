@@ -3,7 +3,6 @@ package urls
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -30,7 +29,7 @@ func TestCreate(t *testing.T) {
 		t.Error("Failed", err)
 	}
 	bodyA, _ := io.ReadAll(res.Body)
-	
+
 	var createdUrl repositories.Urls
 	json.Unmarshal(bodyA, &createdUrl)
 

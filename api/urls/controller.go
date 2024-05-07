@@ -48,9 +48,11 @@ func (u *UrlController) GetUrl(c *fiber.Ctx) error {
 	fmt.Println("NOT HEEEEEERE")
 	id := c.Params("id")
 	fmt.Printf("%+v\n", id)
-	url := u.urlRepo.FindOne(id)
+	url, err := u.urlRepo.FindOne(id)
 	fmt.Printf("yrl is %+v\n", url)
-
+	if err != nil {
+		return c.Status(http.StatusNotFound).JSON("Not Found")
+	}
 	return c.Redirect(url.OriginalUrl, http.StatusMovedPermanently)
 }
 

@@ -40,12 +40,12 @@ func (r *UrlRepository) Create(input UrlInput) Urls {
 	return url
 }
 
-func (r *UrlRepository) FindOne(id string) Urls {
+func (r *UrlRepository) FindOne(id string) (*Urls,error) {
 	var url Urls
-	err := r.db.Find(&url, "short_url = ?", id).Error
+	err := r.db.First(&url, "short_url = ?", id).Error
 	if err != nil {
 		fmt.Println("Error get url", err)
-		return Urls{}
+		return nil, err
 	}
-	return url
+	return &url, nil
 }
