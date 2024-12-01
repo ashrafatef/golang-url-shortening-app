@@ -1,20 +1,20 @@
 package repositories
 
 import (
-	"fmt"
-
+	"github.com/ashrafatef/urlshortening/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
-type UrlInput struct {
+type UrlCreateAttrs struct {
 	Url       string
 	HashedUrl string
 }
 
 type Urls struct {
 	gorm.Model
-	OriginalUrl string `json:"originalUrl",gorm:"index"`
-	ShortUrl    string `json:"shortUrl"`
+	OriginalUrl string `json:"originalUrl"`
+	ShortUrl    string `json:"shortUrl",gorm:"index"`
 }
 
 type UrlRepository struct {
@@ -27,31 +27,32 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 	}
 }
 
-func (r *UrlRepository) Create(input UrlInput) (*Urls, error) {
-	// Validate input
-	if input.Url == "" || input.HashedUrl == "" {
-		return nil, fmt.Errorf("url and hashed url are required")
-	}
-
+func (r *UrlRepository) Create(input UrlCreateAttrs) (*Urls, error) {
 	url := &Urls{
 		OriginalUrl: input.Url,
 		ShortUrl:    input.HashedUrl,
 	}
 
-	// Create record in database
 	if err := r.db.Create(url).Error; err != nil {
-		return nil, fmt.Errorf("error creating url: %w", err)
+		logrus.Error("Error creating url: ", err)
+		return nil, errors.NewApplicationError("Error creating url")
 	}
 
 	return url, nil
 }
 
 func (r *UrlRepository) FindOne(id string) (*Urls, error) {
-	var url Urls
-	err := r.db.First(&url, "short_url = ?", id).Error
-	if err != nil {
-		fmt.Println("Error get url", err)
-		return nil, err
+	var url *Urls
+
+	result := r.db.Take(&url, "short_url = ?", id)
+	if url == nil {
+		return nil, errors.NewNotFoundError("Url not found")
 	}
-	return &url, nil
+
+	if result.Error != nil {
+		logrus.Error("Error finding url: ", result.Error)
+		return nil, errors.NewApplicationError("Error finding url")
+	}
+
+	return url, nil
 }

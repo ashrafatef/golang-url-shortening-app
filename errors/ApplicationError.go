@@ -1,14 +1,16 @@
 package errors
 
+import "net/http"
+
 type ApplicationError struct {
 	Message    string `json:"message"`
 	StatusCode int    `json:"status_code"`
 }
 
-func NewApplicationError(message string, statusCode int) *ApplicationError {
+func NewApplicationError(message string) *ApplicationError {
 	return &ApplicationError{
 		Message:    message,
-		StatusCode: statusCode,
+		StatusCode: http.StatusInternalServerError,
 	}
 }
 

@@ -13,7 +13,6 @@ func SetUpUrlRoutes(app *fiber.App) *fiber.App {
 
 	app.Post("/urls", urlController.Create)
 	app.Get("/urls/:id", urlController.GetUrl)
-	app.Get("/urls", urlController.GetUrls)
 
 	return app
 }
