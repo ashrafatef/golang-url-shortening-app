@@ -27,20 +27,26 @@ func NewUrlRepository(db *gorm.DB) *UrlRepository {
 	}
 }
 
-func (r *UrlRepository) Create(input UrlInput) Urls {
+func (r *UrlRepository) Create(input UrlInput) (*Urls, error) {
+	// Validate input
+	if input.Url == "" || input.HashedUrl == "" {
+		return nil, fmt.Errorf("url and hashed url are required")
+	}
 
-	url := Urls{
+	url := &Urls{
 		OriginalUrl: input.Url,
 		ShortUrl:    input.HashedUrl,
 	}
-	err := r.db.Create(&url)
-	if err != nil {
-		fmt.Println("Error creating url")
+
+	// Create record in database
+	if err := r.db.Create(url).Error; err != nil {
+		return nil, fmt.Errorf("error creating url: %w", err)
 	}
-	return url
+
+	return url, nil
 }
 
-func (r *UrlRepository) FindOne(id string) (*Urls,error) {
+func (r *UrlRepository) FindOne(id string) (*Urls, error) {
 	var url Urls
 	err := r.db.First(&url, "short_url = ?", id).Error
 	if err != nil {

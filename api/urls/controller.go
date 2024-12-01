@@ -1,19 +1,23 @@
 package urls
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 	"net/http"
+	"time"
 
+	"github.com/ashrafatef/urlshortening/errors"
 	"github.com/ashrafatef/urlshortening/repositories"
+	"github.com/ashrafatef/urlshortening/validations"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/mattheath/base62"
+	"github.com/sirupsen/logrus"
 )
 
 type UrlInput struct {
-	OriginalUrl string `json:"original_url"`
+	OriginalUrl string `validate:"required,url" json:"original_url"`
 }
 
 type UrlController struct {
@@ -28,19 +32,28 @@ func NewUrlController(urlRepo *repositories.UrlRepository) *UrlController {
 
 func (u *UrlController) Create(c *fiber.Ctx) error {
 	input := new(UrlInput)
-	fmt.Printf("%+v", c.Body())
+
 	if err := c.BodyParser(&input); err != nil {
 		log.Error(err)
 		return err
 	}
-	fmt.Printf("%+v", input)
+
+	if errs := validations.Validation(input); len(errs) != 0 {
+		logrus.Error("Error validating input: ", errs)
+		return errors.NewValidationError(errs)
+	}
+	
 	hashedUrl := hashUrl(input.OriginalUrl)
 
-	id := u.urlRepo.Create(repositories.UrlInput{
+	id, error := u.urlRepo.Create(repositories.UrlInput{
 		Url:       input.OriginalUrl,
 		HashedUrl: hashedUrl,
 	})
 
+	if error != nil {
+		logrus.Error("Error creating url: ", error)
+		return c.Status(http.StatusInternalServerError).JSON("Internal Server Error")
+	}
 	return c.JSON(id)
 }
 
@@ -62,9 +75,10 @@ func (u *UrlController) GetUrls(c *fiber.Ctx) error {
 }
 
 func hashUrl(url string) string {
-	hasher := md5.New()
 	bigInt := new(big.Int)
-	hashedUrl := bigInt.SetBytes(hasher.Sum([]byte(url)))
+
+	hashed := sha256.Sum256([]byte(url + string(time.Now().UnixMilli())))
+	hashedUrl := bigInt.SetBytes(hashed[:])
 
 	encoded := base62.EncodeBigInt(hashedUrl)
 	fmt.Printf("encoded is %+v\n", string(encoded))
