@@ -1,18 +1,15 @@
 package urls
 
 import (
-	"crypto/sha256"
-	"fmt"
+	"crypto/rand"
 	"math/big"
 	"net/http"
-	"time"
 
 	"github.com/ashrafatef/urlshortening/errors"
 	"github.com/ashrafatef/urlshortening/repositories"
 	"github.com/ashrafatef/urlshortening/validations"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/mattheath/base62"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,19 +39,30 @@ func (u *UrlController) Create(c *fiber.Ctx) error {
 		logrus.Error("Error validating input: ", errs)
 		return errors.NewValidationError(errs)
 	}
+	var shortUrl string
+	for ok := true; ok; {
+		hashedUrl, _ := generateRandomCode(8)
+		url, _ := u.urlRepo.FindOne(hashedUrl)
 
-	hashedUrl := hashUrl(input.OriginalUrl)
+		if url != nil {
+			continue
+		}
+		_, error := u.urlRepo.Create(repositories.UrlCreateAttrs{
+			Url:       input.OriginalUrl,
+			HashedUrl: hashedUrl,
+		})
 
-	id, error := u.urlRepo.Create(repositories.UrlCreateAttrs{
-		Url:       input.OriginalUrl,
-		HashedUrl: hashedUrl,
-	})
-
-	if error != nil {
-		logrus.Error("Error creating url: ", error)
-		return c.Status(http.StatusInternalServerError).JSON("Internal Server Error")
+		if error != nil {
+			logrus.Error("Error creating url: ", error)
+			return c.Status(http.StatusInternalServerError).JSON("Internal Server Error")
+		}
+		shortUrl = hashedUrl
+		ok = false
 	}
-	return c.JSON(id)
+
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"shortUrl": shortUrl,
+	})
 }
 
 func (u *UrlController) GetUrl(c *fiber.Ctx) error {
@@ -66,18 +74,19 @@ func (u *UrlController) GetUrl(c *fiber.Ctx) error {
 	return c.Redirect(url.OriginalUrl, http.StatusMovedPermanently)
 }
 
-func hashUrl(url string) string {
-	bigInt := new(big.Int)
-
-	hashed := sha256.Sum256([]byte(url + string(time.Now().UnixMilli())))
-	hashedUrl := bigInt.SetBytes(hashed[:])
-
-	encoded := base62.EncodeBigInt(hashedUrl)
-	fmt.Printf("encoded is %+v\n", string(encoded))
-	return string(encoded)[0:8]
+func generateRandomCode(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		result[i] = charset[index.Int64()]
+	}
+	return string(result), nil
 }
 
-// apply validation for all endpoints
 // apply testing all endpoints
 // dockerize the app
 // create github workflow for testing

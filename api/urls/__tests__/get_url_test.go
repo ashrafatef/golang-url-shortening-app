@@ -16,7 +16,7 @@ func TestGetUrl(t *testing.T) {
 	urlRepo := repositories.NewUrlRepository(dbConn)
 
 	t.Run("redirects if the url found", func(t *testing.T) {
-		createdUrl := urlRepo.Create(repositories.UrlInput{
+		createdUrl , _ := urlRepo.Create(repositories.UrlCreateAttrs{
 			Url:       "https://www.gogle.com",
 			HashedUrl: "x1x1x2",
 		})

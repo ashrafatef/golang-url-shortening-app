@@ -12,9 +12,11 @@ import (
 	"github.com/ashrafatef/urlshortening/api/urls"
 	"github.com/ashrafatef/urlshortening/repositories"
 	"github.com/ashrafatef/urlshortening/server"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreate(t *testing.T) {
+	assert := assert.New(t)
 
 	t.Run("Create url", func(t *testing.T) {
 		app := server.SetupServer()
@@ -26,44 +28,45 @@ func TestCreate(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/urls", bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
 
-		res, err := app.Test(req, -1)
+		res, _ := app.Test(req, -1)
 
-		if res.StatusCode != 200 {
-			t.Error("Failed", err)
-		}
+		assert.Equal(200, res.StatusCode)
 		bodyA, _ := io.ReadAll(res.Body)
 
 		var createdUrl repositories.Urls
 		json.Unmarshal(bodyA, &createdUrl)
 		fmt.Println(bodyA)
-		if createdUrl.ShortUrl == "" {
-			t.Error("Failed no short url")
-		}
+		assert.Len(createdUrl.ShortUrl, 8)
 	})
 
 	t.Run("Create unique short for same two urls", func(t *testing.T) {
 		app := server.SetupServer()
-		input := &urls.UrlInput{
-			OriginalUrl: "https://www.gogle.com",
+		input := []urls.UrlInput{
+			{OriginalUrl: "https://www.google.com"},
+			{OriginalUrl: "https://www.google.com"},
 		}
-		body, _ := json.Marshal(input)
 
-		req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/urls", bytes.NewBuffer(body))
-		req.Header.Set("Content-Type", "application/json")
+		createShortUrl := func(url urls.UrlInput) string {
+			body, _ := json.Marshal(url)
 
-		res, err := app.Test(req, -1)
+			req := httptest.NewRequest(http.MethodPost, "http://localhost:3000/urls", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
 
-		if res.StatusCode != 200 {
-			t.Error("Failed", err)
+			res, _ := app.Test(req, -1)
+
+			// assert.Equal(200, res.StatusCode)
+			bodyA, _ := io.ReadAll(res.Body)
+
+			var createdUrl repositories.Urls
+			json.Unmarshal(bodyA, &createdUrl)
+
+			return createdUrl.ShortUrl
 		}
-		bodyA, _ := io.ReadAll(res.Body)
 
-		var createdUrl repositories.Urls
-		json.Unmarshal(bodyA, &createdUrl)
-
-		if createdUrl.ShortUrl == "" {
-			t.Error("Failed no short url")
-		}
+		firstUrl := createShortUrl(input[0])
+		secondUrl := createShortUrl(input[1])
+		fmt.Println(firstUrl)
+		fmt.Println(secondUrl)
+		assert.NotEqual(firstUrl, secondUrl)
 	})
-
 }
