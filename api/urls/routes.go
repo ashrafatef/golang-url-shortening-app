@@ -1,8 +1,8 @@
 package urls
 
 import (
-	"github.com/ashrafatef/urlshortening/db"
-	"github.com/ashrafatef/urlshortening/repositories"
+	"github.com/ashrafatef/urlshortening/infra/db"
+	"github.com/ashrafatef/urlshortening/infra/repositories"
 	"github.com/gofiber/fiber/v2"
 )
 

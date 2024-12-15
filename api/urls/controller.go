@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"net/http"
 
-	"github.com/ashrafatef/urlshortening/errors"
-	"github.com/ashrafatef/urlshortening/repositories"
-	"github.com/ashrafatef/urlshortening/validations"
+	"github.com/ashrafatef/urlshortening/application/errors"
+	"github.com/ashrafatef/urlshortening/application/validations"
+	"github.com/ashrafatef/urlshortening/infra/repositories"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/sirupsen/logrus"

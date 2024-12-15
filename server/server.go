@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/ashrafatef/urlshortening/api/urls"
-	"github.com/ashrafatef/urlshortening/db"
-	"github.com/ashrafatef/urlshortening/errors"
+	"github.com/ashrafatef/urlshortening/application/errors"
+	"github.com/ashrafatef/urlshortening/infra/db"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -29,12 +30,11 @@ func SetupServer() *fiber.App {
 			})
 		},
 	})
-	db.Connect()
 
 	app = urls.SetUpUrlRoutes(app)
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendStatus(http.StatusOK)
 	})
-
+	db.Connect()
 	return app
 }

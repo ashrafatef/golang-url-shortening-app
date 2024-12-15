@@ -3,7 +3,7 @@ package errors
 import (
 	"net/http"
 
-	"github.com/ashrafatef/urlshortening/validations"
+	"github.com/ashrafatef/urlshortening/application/validations"
 )
 
 type ValidationError struct {

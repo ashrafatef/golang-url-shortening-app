@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/ashrafatef/urlshortening/errors"
+	"github.com/ashrafatef/urlshortening/application/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
