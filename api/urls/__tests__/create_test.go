@@ -17,7 +17,11 @@ import (
 
 func TestCreate(t *testing.T) {
 	assert := assert.New(t)
-
+	t.Setenv("DB_NAME", "url_shortening")
+	t.Setenv("DB_USER_NAME", "postgres")
+	t.Setenv("DB_HOST", "localhost")
+	t.Setenv("DB_PASSWORD", "postgres")
+	t.Setenv("DB_PORT", "5432")
 	t.Run("Create url", func(t *testing.T) {
 		app := server.SetupServer()
 		input := &urls.UrlInput{
