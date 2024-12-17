@@ -1,5 +1,19 @@
-Url Shorting API in Golang
+# Url Shorting API in Golang
 
-- I am developing this project to learn Golang
-- I am using Postgres as database 
-- I am using Fiber package as http framework 
+❌ (not yet) | ✅ Done 
+
+## Features 
+- Create short url for your url ✅
+- Redirected to original url when you provided the short url ✅
+- Url analytics ❌  
+
+## What Project Cover ? 
+- Golang (Fiber) ✅
+- Github Actions ✅
+- Postgres Database ✅
+- Docker ✅
+- Caching ❌ (not yet)
+- Docker Compose for local development ✅
+- Testing (Integration Test) ✅
+- Error Handling ✅ 
+- Rest Api 
